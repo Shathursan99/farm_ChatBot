@@ -15,12 +15,13 @@ const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hello! I'm your farming assistant. I'm here to help you with questions about crops, livestock, weather, and farming techniques. What would you like to know?",
+      text: "வணக்கம்! நான் உங்கள் விவசாய உதவியாளர். பயிர்கள் மற்றும் விவசாய நுட்பங்கள் பற்றிய கேள்விகளுக்கு உங்களுக்கு உதவ நான் இங்கே இருக்கிறேன். நீங்கள் என்ன தெரிந்து கொள்ள விரும்புகிறீர்கள்?",
       isUser: false,
       timestamp: new Date(),
     }
   ]);
-  const [inputText, setInputText] = useState('');
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -32,63 +33,50 @@ const ChatInterface = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = async () => {
-    if (!inputText.trim()) return;
-
-    const newMessage: Message = {
+  async function sendMessage() {
+    if (!input.trim()) return;
+    setLoading(true);
+    setIsTyping(true);
+    // Add user message
+    const userMessage: Message = {
       id: messages.length + 1,
-      text: inputText,
+      text: input,
       isUser: true,
       timestamp: new Date(),
     };
-
-    setMessages(prev => [...prev, newMessage]);
-    setInputText('');
-    setIsTyping(true);
-
-    // Simulate bot response after a delay
-    setTimeout(() => {
-      const botResponse: Message = {
+    setMessages(prev => [...prev, userMessage]);
+    try {
+      const res = await fetch("http://localhost:8000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input })
+      });
+      const data = await res.json();
+      const botMessage: Message = {
         id: messages.length + 2,
-        text: getBotResponse(inputText),
+        text: data.reply,
         isUser: false,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, botResponse]);
-      setIsTyping(false);
-    }, 1500);
-  };
+      setMessages(prev => [...prev, botMessage]);
+    } catch (err) {
+      const errorMessage: Message = {
+        id: messages.length + 2,
+        text: "Error connecting to backend.",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+    setInput("");
+    setIsTyping(false);
+    setLoading(false);
+  }
 
-  const getBotResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes('weather') || input.includes('rain') || input.includes('temperature')) {
-      return "For accurate weather information, I recommend checking your local weather service. Generally, most crops need consistent moisture and temperatures between 60-80°F for optimal growth. Would you like specific advice for a particular crop?";
-    }
-    
-    if (input.includes('crop') || input.includes('plant') || input.includes('grow')) {
-      return "Great question about crops! The best crops to grow depend on your climate, soil type, and market demand. Popular options include tomatoes, corn, soybeans, and lettuce. What's your location and what type of farming are you interested in?";
-    }
-    
-    if (input.includes('pest') || input.includes('insect') || input.includes('bug')) {
-      return "Pest management is crucial for healthy crops. Integrated Pest Management (IPM) combines biological, cultural, and chemical controls. Consider beneficial insects, crop rotation, and targeted treatments. What specific pest issues are you facing?";
-    }
-    
-    if (input.includes('soil') || input.includes('fertilizer') || input.includes('nutrient')) {
-      return "Healthy soil is the foundation of successful farming! I recommend getting a soil test to check pH and nutrient levels. Most crops prefer slightly acidic to neutral soil (pH 6.0-7.0). Organic matter like compost greatly improves soil health.";
-    }
-    
-    if (input.includes('livestock') || input.includes('cattle') || input.includes('chicken') || input.includes('pig')) {
-      return "Livestock management involves proper nutrition, housing, health care, and breeding programs. Each animal has specific needs - cattle need pasture and hay, chickens need secure coops, and pigs need balanced feed. What livestock are you raising?";
-    }
-    
-    return "That's an interesting farming question! I'd be happy to help you with more specific information. Could you provide more details about your situation, location, or the specific farming challenge you're facing?";
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      sendMessage();
     }
   };
 
@@ -99,7 +87,7 @@ const ChatInterface = () => {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}
           >
             <div className="flex items-start gap-3 max-w-[80%]">
               {!message.isUser && (
@@ -107,26 +95,24 @@ const ChatInterface = () => {
                   <Leaf className="w-4 h-4 text-primary-foreground" />
                 </div>
               )}
-              
               <Card
                 className={`p-3 transition-var(--transition-smooth) ${
                   message.isUser
-                    ? 'bg-chat-user text-chat-user-foreground rounded-tl-lg rounded-tr-lg rounded-bl-lg'
-                    : 'bg-chat-bot text-chat-bot-foreground rounded-tl-lg rounded-tr-lg rounded-br-lg'
+                    ? "bg-chat-user text-chat-user-foreground rounded-tl-lg rounded-tr-lg rounded-bl-lg"
+                    : "bg-chat-bot text-chat-bot-foreground rounded-tl-lg rounded-tr-lg rounded-br-lg"
                 }`}
               >
                 <p className="text-sm leading-relaxed">{message.text}</p>
                 <span className="text-xs opacity-70 mt-2 block">
-                  {message.timestamp.toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </span>
               </Card>
             </div>
           </div>
         ))}
-        
         {isTyping && (
           <div className="flex justify-start">
             <div className="flex items-start gap-3 max-w-[80%]">
@@ -136,31 +122,29 @@ const ChatInterface = () => {
               <Card className="bg-chat-bot text-chat-bot-foreground p-3 rounded-tl-lg rounded-tr-lg rounded-br-lg">
                 <div className="flex gap-1">
                   <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
                 </div>
               </Card>
             </div>
           </div>
         )}
-        
         <div ref={messagesEndRef} />
       </div>
-
       {/* Input Area */}
       <div className="border-t bg-background/80 backdrop-blur-sm p-4">
         <div className="flex gap-2 max-w-4xl mx-auto">
           <Input
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyPress={handleKeyPress}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Ask me anything about farming..."
             className="flex-1 border-border focus:ring-primary"
-            disabled={isTyping}
+            disabled={isTyping || loading}
           />
           <Button
-            onClick={handleSendMessage}
-            disabled={!inputText.trim() || isTyping}
+            onClick={sendMessage}
+            disabled={!input.trim() || isTyping || loading}
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             <Send className="w-4 h-4" />
