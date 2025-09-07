@@ -43,20 +43,46 @@ const ChatInterface = () => {
     };
 
     setMessages(prev => [...prev, newMessage]);
+    const currentInput = inputText;
     setInputText('');
     setIsTyping(true);
 
-    // Simulate bot response after a delay
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:8000/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: currentInput
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from server');
+      }
+
+      const data = await response.json();
+      
       const botResponse: Message = {
         id: messages.length + 2,
-        text: getBotResponse(inputText),
+        text: data.response || data.message || 'Sorry, I could not process your request.',
         isUser: false,
         timestamp: new Date(),
       };
+      
       setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      const errorResponse: Message = {
+        id: messages.length + 2,
+        text: 'Sorry, I am having trouble connecting to the server. Please try again later.',
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const getBotResponse = (userInput: string): string => {
