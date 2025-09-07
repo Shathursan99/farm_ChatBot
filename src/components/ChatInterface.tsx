@@ -54,19 +54,32 @@ const ChatInterface = () => {
       const data = await res.json();
       const botMessage: Message = {
         id: messages.length + 2,
-        text: data.reply,
+        text: getBotResponse(inputText),
         isUser: false,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, botMessage]);
-    } catch (err) {
-      const errorMessage: Message = {
-        id: messages.length + 2,
-        text: "Error connecting to backend.",
-        isUser: false,
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, botResponse]);
+      setIsTyping(false);
+    }, 1500);
+  };
+
+  const getBotResponse = (userInput: string): string => {
+    const input = userInput.toLowerCase();
+    
+    if (input.includes('weather') || input.includes('rain') || input.includes('temperature')) {
+      return "For accurate weather information, I recommend checking your local weather service. Generally, most crops need consistent moisture and temperatures between 60-80°F for optimal growth. Would you like specific advice for a particular crop?";
+    }
+    
+    if (input.includes('crop') || input.includes('plant') || input.includes('grow')) {
+      return "Great question about crops! The best crops to grow depend on your climate, soil type, and market demand. Popular options include tomatoes, corn, soybeans, and lettuce. What's your location and what type of farming are you interested in?";
+    }
+    
+    if (input.includes('pest') || input.includes('insect') || input.includes('bug')) {
+      return "Pest management is crucial for healthy crops. Integrated Pest Management (IPM) combines biological, cultural, and chemical controls. Consider beneficial insects, crop rotation, and targeted treatments. What specific pest issues are you facing?";
+    }
+    
+    if (input.includes('soil') || input.includes('fertilizer') || input.includes('nutrient')) {
+      return "Healthy soil is the foundation of successful farming! I recommend getting a soil test to check pH and nutrient levels. Most crops prefer slightly acidic to neutral soil (pH 6.0-7.0). Organic matter like compost greatly improves soil health.";
     }
     setInput("");
     setIsTyping(false);
