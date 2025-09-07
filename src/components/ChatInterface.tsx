@@ -43,72 +43,46 @@ const ChatInterface = () => {
     };
 
     setMessages(prev => [...prev, newMessage]);
-    const currentInput = inputText;
     setInputText('');
     setIsTyping(true);
 
-    try {
-      // Call the API directly
-      const botResponseText = await getBotResponse(currentInput);
-      
+    // Simulate bot response after a delay
+    setTimeout(() => {
       const botResponse: Message = {
         id: messages.length + 2,
-        text: botResponseText,
+        text: getBotResponse(inputText),
         isUser: false,
         timestamp: new Date(),
       };
-      
       setMessages(prev => [...prev, botResponse]);
-    } catch (error) {
-      console.error('Error getting bot response:', error);
-      const errorResponse: Message = {
-        id: messages.length + 2,
-        text: "I'm sorry, I'm having trouble connecting to my knowledge base right now. Please try again in a moment.",
-        isUser: false,
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorResponse]);
-    } finally {
       setIsTyping(false);
-    }
+    }, 1500);
   };
 
-  const getBotResponse = async (userInput: string): Promise<string> => {
-    try {
-      const response = await fetch('https://7c4105ca74f527e09f.gradio.live/api/predict', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: [
-            userInput,    // message
-            512,          // max_new_tokens
-            0.3,          // temperature
-            0.95,         // top_p
-            50,           // top_k
-            1.1           // repetition_penalty
-          ],
-          fn_index: 0,    // corresponds to "/chat" api_name
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      // Gradio typically returns data in result.data array
-      if (result.data && result.data.length > 0) {
-        return result.data[0] || "I'm having trouble processing your request. Please try again.";
-      } else {
-        throw new Error('Invalid response format');
-      }
-    } catch (error) {
-      console.error('Error calling Gradio API:', error);
-      return "I'm sorry, I'm having trouble connecting to my knowledge base right now. Please try again in a moment.";
+  const getBotResponse = (userInput: string): string => {
+    const input = userInput.toLowerCase();
+    
+    if (input.includes('weather') || input.includes('rain') || input.includes('temperature')) {
+      return "For accurate weather information, I recommend checking your local weather service. Generally, most crops need consistent moisture and temperatures between 60-80°F for optimal growth. Would you like specific advice for a particular crop?";
     }
+    
+    if (input.includes('crop') || input.includes('plant') || input.includes('grow')) {
+      return "Great question about crops! The best crops to grow depend on your climate, soil type, and market demand. Popular options include tomatoes, corn, soybeans, and lettuce. What's your location and what type of farming are you interested in?";
+    }
+    
+    if (input.includes('pest') || input.includes('insect') || input.includes('bug')) {
+      return "Pest management is crucial for healthy crops. Integrated Pest Management (IPM) combines biological, cultural, and chemical controls. Consider beneficial insects, crop rotation, and targeted treatments. What specific pest issues are you facing?";
+    }
+    
+    if (input.includes('soil') || input.includes('fertilizer') || input.includes('nutrient')) {
+      return "Healthy soil is the foundation of successful farming! I recommend getting a soil test to check pH and nutrient levels. Most crops prefer slightly acidic to neutral soil (pH 6.0-7.0). Organic matter like compost greatly improves soil health.";
+    }
+    
+    if (input.includes('livestock') || input.includes('cattle') || input.includes('chicken') || input.includes('pig')) {
+      return "Livestock management involves proper nutrition, housing, health care, and breeding programs. Each animal has specific needs - cattle need pasture and hay, chickens need secure coops, and pigs need balanced feed. What livestock are you raising?";
+    }
+    
+    return "That's an interesting farming question! I'd be happy to help you with more specific information. Could you provide more details about your situation, location, or the specific farming challenge you're facing?";
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
