@@ -1,81 +1,68 @@
-# Tamil ChatBot – Crop Consult Chat
+# Farm ChatBot (Tamil Crop Consult)
 
-A full-stack chatbot application for Tamil-speaking farmers, built with FastAPI (Python) backend and React (TypeScript) frontend. The bot answers questions about crops and farming techniques in Tamil.
+A full-stack chatbot for Tamil-speaking farmers. The frontend provides a chat UI, and the backend proxies requests to a Gradio-hosted model that answers crop and farming questions.
 
----
+## Use Case
 
-## Features
+- Farmers ask questions about crop care, pests, irrigation, and seasonal practices in Tamil.
+- The system returns concise guidance from a hosted model through a simple chat interface.
 
-- **Conversational AI**: Chatbot answers farming-related queries in Tamil.
-- **Modern UI**: Built with React, TypeScript, and Tailwind CSS.
-- **FastAPI Backend**: Handles chat requests and proxies them to a Gradio-based model.
+## Tech Stack
 
----
+- Frontend: React 18 + TypeScript, Vite, Tailwind CSS, shadcn/ui, Radix UI
+- Backend: FastAPI (Python) with `gradio_client` as a proxy to the model
+- Tooling: ESLint, PostCSS
 
 ## Project Structure
 
 ```
-Tamil_ChatBot/
-│
-├── fastApi.py                # FastAPI backend (Python)
-├── .venv/                    # Python virtual environment
-│
-└── crop-consult-chat/
-    ├── src/
-    │   ├── App.tsx           # Main React app
-    │   └── components/
-    │       └── ChatInterface.tsx
-    └── ...                   # Other frontend files
+.
+├─ src/                 # React app
+├─ public/              # Static assets
+├─ fastApi.py           # FastAPI backend proxy
+├─ package.json         # Frontend scripts and deps
+└─ README.md
 ```
-
----
 
 ## Getting Started
 
-### 1. Backend (FastAPI)
+### Backend (FastAPI)
 
-**Requirements:** Python 3.10+, pip
+Requirements: Python 3.10+
 
 ```bash
-cd Tamil_ChatBot
 python -m venv .venv
-.venv\Scripts\activate  # On Windows
+.venv\Scripts\activate
 pip install fastapi uvicorn gradio_client pydantic
 ```
 
-**Run the backend:**
+Run the API:
+
 ```bash
 uvicorn fastApi:app --reload --port 8000
 ```
 
-- The API will be available at `http://localhost:8000`
-- Health check: `GET /health`
-- Chat endpoint: `POST /chat` with JSON body:  
+Endpoints:
+
+- `GET /health`
+- `POST /chat` with JSON body:
   `{ "message": "..." }`
 
-### 2. Frontend (React)
+### Frontend (React)
 
-**Requirements:** Node.js, npm
+Requirements: Node.js + npm
 
 ```bash
-cd crop-consult-chat
 npm install
 npm run dev
 ```
 
-- The frontend runs at `http://localhost:5173` (or as shown in your terminal)
-- Make sure the backend is running at `http://localhost:8000` (default in code)
-
----
+The app runs at `http://localhost:5173`. The backend defaults to `http://localhost:8000` in the app code.
 
 ## Configuration
 
-- **Gradio Model URL:**  
-  Set the `GRADIO_URL` environment variable in your backend if you want to use a different Gradio deployment.
+- `GRADIO_URL`: Set to a different Gradio deployment if needed.
 
----
+## Notes
 
-
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [React](https://react.dev/)
-- [Gradio](https://gradio.app/)
+- CORS is currently open for local dev. Lock down origins in production.
